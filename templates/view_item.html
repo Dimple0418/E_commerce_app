@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Product</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <h2>Product Details</h2>
+
+    <p><strong>ID:</strong> {{ product[0] }}</p>
+
+    <p><strong>Product Name:</strong> {{ product[1] }}</p>
+
+    <p><strong>Description:</strong> {{ product[2] }}</p>
+
+    <p><strong>Price:</strong> ₹{{ product[3] }}</p>
+
+    <p><strong>Image:</strong></p>
+
+    {% if product[4] %}
+        <img src="{{ url_for('static', filename='images/' + product[4]) }}"
+             width="250">
+    {% else %}
+        <p>No Image Available</p>
+    {% endif %}
+
+    <br><br>
+
+    <a href="{{ url_for('item_listing') }}">
+        Back to Product List
+    </a>
+
+</body>
+</html>

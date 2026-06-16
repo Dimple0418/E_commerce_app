@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
@@ -27,7 +28,7 @@
 
 <br>
 
-<a href="{{ url_for('admin_logout') }}">Logout</a>
+<a href="{{ url_for('logout') }}">Logout</a>
 
 </body>
 </html>
