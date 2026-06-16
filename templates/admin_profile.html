@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    
+
+<form method="POST" enctype="multipart/form-data">
+
+    <input type="text"
+           name="name"
+           value="{{ admin[1] }}"
+           required>
+
+    <br><br>
+
+    <input type="email"
+           name="email"
+           value="{{ admin[2] }}"
+           required>
+
+    <br><br>
+
+    {% if admin[4] %}
+
+    <img src="{{ url_for('static',
+                          filename='images/' + admin[4]) }}"
+         width="120">
+
+    <br><br>
+
+    {% endif %}
+
+    <input type="file" name="image">
+
+    <br><br>
+
+    <button type="submit">
+        Update Profile
+    </button>
+
+</form>
+</body>
+</html>

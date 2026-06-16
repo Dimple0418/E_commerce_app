@@ -141,6 +141,44 @@ def admin_dashboard():
         flash('Please login first')
         return redirect('/admin_login')
     return render_template('admin_dashboard.html',admin_name=session['admin_name'],admin_email=session['admin_email'])
+
+#ADMIN PROFILE 
+@app.route('/admin_profile',methods=['GET','POST'])
+def admin_profile():
+    if 'admin_id' not in session:
+        flash("Please login in first")
+        return redirect('/admin_login')
+    admin_id = session['admin_id']
+    cursor.execute(
+        "SELECT * FROM admin WHERE id=%s",(admin_id,)
+    )
+    admin=cursor.fetchone()
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        image = request.files.get('image')
+    #existing file image name
+        filename = admin[4] if admin else ""
+    #upload new image name
+        if image and image.filename != "":
+            filename = secure_filename(image.filename)
+            image_save(
+                os.path.join(
+                app.config['UPLOAD_FOLDER'],
+                filename
+            )
+            )
+        cursor.execute(
+            """
+            update admin set name=%s,email=%s,image=%s where id=%s """,(name,email,image,admin_id)
+        )
+        conn.commit()
+        session['admin_email'] = email
+        session['admin_name'] = name
+        flash("Admin profile updated successfully")
+        return redirect('/admin_profile')
+    return render_template('/admin_profile.html',admin=admin)
+
 # LOGOUT
 @app.route('/logout')
 def logout():
