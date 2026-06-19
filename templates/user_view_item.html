@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>{{ product[1] }}</h2>
+
+<img src="{{ url_for('static',
+filename='images/' + product[4]) }}"
+width="300">
+
+<p>
+    <strong>Description:</strong>
+    {{ product[2] }}
+</p>
+
+<p>
+    <strong>Price:</strong>
+    ₹ {{ product[3] }}
+</p>
+
+<a href="/user_dashboard">
+    Back
+</a>
+    
+</body>
+</html>

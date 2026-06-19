@@ -292,6 +292,37 @@ def delete_item(product_id):
      return redirect('/item_listing')
 
 
+@app.route('/user_dashboard')
+def user_dashboard():
+    cursor.execute("SELECT * FROM products")
+    products=cursor.fetchall()
+    return render_template('user_dashboard.html',products=products)
+
+@app.route('/user_view_item/<int:product_id>')
+def user_view_item(product_id):
+    cursor.execute(
+        "select * from products where id=%s",
+        (product_id,)
+    )
+    product = cursor.fetchone()
+    if not product:
+        flash("product not found")
+        return redirect('/user_dashboard')
+    return render_template('user_view_item.html',product = product)
+
+@app.route('/user_search',methods=['GET','POST'])
+def user_search():
+    if request.method == 'POST':
+        keyword=request.form['keyword']
+        cursor.execute(
+            """
+            select * from products where product_name LIKE %s OR description LIKE %s""",("%" + keyword + "%","%" + keyword + "%")
+        )
+        products = cursor.fetchall()
+    else:
+        cursor.execute("SELECT * from products")
+        products = cursor.fetchall()
+    return render_template('search_results.html',products=products)
 
 if __name__ == '__main__':
     app.run(debug=True)
