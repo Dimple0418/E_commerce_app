@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Cart</title>
+<link rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">My Cart</h2>
+
+    {% if cart %}
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th>Image</th>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+
+        {% for item in cart %}
+        <tr>
+
+            <td>
+                <img src="{{ url_for('static', filename='images/' + item.image) }}"
+                     width="80">
+            </td>
+
+            <td>{{ item.name }}</td>
+
+            <td>₹{{ item.price }}</td>
+
+            <td>
+                <a href="{{ url_for('remove_cart', product_id=item.id) }}"
+                   class="btn btn-danger btn-sm">
+                    Remove
+                </a>
+            </td>
+
+        </tr>
+        {% endfor %}
+
+        <tr>
+            <td colspan="2">
+                <b>Total</b>
+            </td>
+
+            <td colspan="2">
+                <b>₹{{ total }}</b>
+            </td>
+        </tr>
+
+    </table>
+
+    <!-- Payment Button -->
+    <div class="mb-3">
+
+        <a href="/checkout" class="btn btn-success">
+            Proceed To Payment
+        </a>
+
+        <a href="/user_dashboard" class="btn btn-secondary">
+            Continue Shopping
+        </a>
+
+    </div>
+
+    {% else %}
+
+    <div class="alert alert-warning">
+        Cart Is Empty
+    </div>
+
+    <a href="/user_dashboard" class="btn btn-secondary">
+        Continue Shopping
+    </a>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

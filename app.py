@@ -3,10 +3,25 @@ import mysql.connector,random,smtplib,bcrypt
 from email.message import EmailMessage
 import os
 from werkzeug.utils import secure_filename
+import razorpay
+import hmac
+import hashlib
+from flask import jsonify
+
 
 app=Flask(__name__)
 app.secret_key='your_secret_key'
-app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'static', 'image')
+
+RAZORPAY_KEY_ID="rzp_test_T3qg30s00oLBEF"
+RAZORPAY_KEY_SECRET="RRYtBBUKT1swg4mcfS0YJvFa"
+
+client=razorpay.Client(auth =(RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET))
+
+app.config['UPLOAD_FOLDER'] = os.path.join(
+    os.getcwd(),
+    'static',
+    'images'
+)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 #DATABASE CONNECTION
@@ -72,6 +87,7 @@ def admin_signup():
         flash("OTP sent successful")
         return redirect('/verify_otp')
     return render_template('admin_signup.html')
+
 
 # VERIFY OTP
 @app.route('/verify_otp',methods=['GET','POST'])
@@ -162,16 +178,21 @@ def admin_profile():
     #upload new image name
         if image and image.filename != "":
             filename = secure_filename(image.filename)
-            image_save(
+            image.save(
                 os.path.join(
                 app.config['UPLOAD_FOLDER'],
                 filename
             )
             )
         cursor.execute(
-            """
-            update admin set name=%s,email=%s,image=%s where id=%s """,(name,email,image,admin_id)
+        """
+        UPDATE admin
+        SET name=%s,email=%s,image=%s
+        WHERE id=%s
+        """,
+        (name,email,filename,admin_id)
         )
+       
         conn.commit()
         session['admin_email'] = email
         session['admin_name'] = name
@@ -234,15 +255,31 @@ def item_listing():
 
     return render_template('item_listing.html',products=products,keyword=keyword)
 
+#------------view item----------------#
 @app.route('/view_item/<int:product_id>')
 def view_item(product_id):
-    if 'admin_id' not in session:
-        flash("PLease login first")
-        return redirect("/admin_login")
-    cursor.execute("SELECT * FROM products WHERE id=%s",(product_id,))
-    product = cursor.fetchone()
-@app.route('/update_item/<int:product_id>',methods=['GET','POST'])
 
+    if 'admin_id' not in session:
+        flash("Please Login")
+        return redirect('/admin_login')
+
+    cursor.execute(
+        "SELECT * FROM products WHERE id=%s",
+        (product_id,)
+    )
+
+    product = cursor.fetchone()
+
+    if not product:
+        flash("Product Not Found")
+        return redirect('/item_listing')
+
+    return render_template(
+        'view_item.html',
+        product=product
+    )
+
+@app.route('/update_item/<int:product_id>',methods=['GET','POST'])
 def update_item(product_id):
     if 'admin_id' not in session:
         flash("Please login")
@@ -286,30 +323,219 @@ def delete_item(product_id):
      if 'admin_id' not in session:
         flash("Please login")
         return redirect("/admin_login")
-     cursor.execute("DELETE FROM products WHERE id=%s",(product_id),)
+     
+     cursor.execute(
+     "DELETE FROM products WHERE id=%s",
+     (product_id,)
+     )
+     
      conn.commit()
      flash("Product deleted succesfully")
      return redirect('/item_listing')
 
 
+#USER SIGNUP
+@app.route('/user_signup',methods=['GET','POST'])
+def user_signup():
+    if request.method == 'POST':
+        name=request.form['name']
+        email=request.form['email']
+        password=request.form['password']
+
+        cursor.execute(
+            "SELECT * FROM users WHERE email=%s",(email,)
+        )
+        if cursor.fetchone():
+            flash("Email Already Registered")
+            return redirect('/user_signup')
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
+        cursor.execute(
+            """ 
+            INSERT INTO users (name,email,password) 
+            VALUES (%s,%s,%s)
+            """,
+            (
+                name,
+                email,
+                hashed_password.decode('utf-8'))
+        )
+        conn.commit()
+        flash("signup successful")
+        return redirect('/user_login')
+    return render_template('user_signup.html')
+
+#USER LOGIN
+@app.route('/user_login',methods=['GET','POST'])
+def user_login():
+    if request.method == 'POST':
+        email=request.form['email']
+        password=request.form['password']
+
+        cursor.execute(
+            "select * from users where email=%s",(email,)
+        )
+        user=cursor.fetchone()
+        if user:
+            stored_password = user[3]
+            if bcrypt.checkpw(password.encode('utf-8'),stored_password.encode('utf-8')):
+
+                session['user_id'] = user[0]
+                session['user_name'] = user[1]
+                session['user_email'] = user[2]
+                flash("Loggedd in successfully")
+                return redirect('/user_dashboard')
+            else:
+                flash("Invalid Password")
+        else:
+            flash("Mail not Registered")
+    return render_template('user_login.html')
+
+#USER SIGNOUT
+@app.route('/user_logout')
+def user_logout():
+    session.pop('user_id',None)
+    session.pop('user_name',None)
+    session.pop('user_email',None)
+    
+    flash("Logged out successfully")
+
+    return redirect('/user_login')
+
+#-------------USER DASHBOARD----#
+
 @app.route('/user_dashboard')
 def user_dashboard():
-    cursor.execute("SELECT * FROM products")
-    products=cursor.fetchall()
-    return render_template('user_dashboard.html',products=products)
 
-@app.route('/user_view_item/<int:product_id>')
-def user_view_item(product_id):
+    if 'user_id' not in session:
+        flash("Please Login First")
+        return redirect('/user_login')
+
     cursor.execute(
-        "select * from products where id=%s",
-        (product_id,)
+        "SELECT * FROM products"
     )
-    product = cursor.fetchone()
-    if not product:
-        flash("product not found")
-        return redirect('/user_dashboard')
-    return render_template('user_view_item.html',product = product)
 
+    products = cursor.fetchall()
+
+    return render_template(
+        'user_dashboard.html',
+        products=products
+    )
+
+# @app.route('/user_dashboard')
+# def user_dashboard():
+#     cursor.execute("SELECT * FROM products")
+#     products=cursor.fetchall()
+#     return render_template('user_dashboard.html',products=products)
+
+#----------------checkout-----------------#
+@app.route('/checkout')
+def checkout():
+    if 'user_id' not in session:
+        return redirect ('/user_login')
+    
+    cart=session.get('cart',[])
+    total=sum(item['price'] for item in cart)
+
+    order=client.order.create({
+        "amount":int(total*100),
+        "currency":"INR",
+        "payment_capture":1
+    })
+    session ['razorpay_order_id']=order['id']
+
+    return render_template(
+        'checkout.html',
+        amount=total,
+        order_id=order['id'],
+        key_id=RAZORPAY_KEY_ID
+    )
+
+#------------verify payment----------#
+@app.route('/verify_payment',methods=['POST'])
+def verify_payment():
+    data=request.get_json()
+
+    razorpay_order_id=data['razorpay_order_id']
+    razorpay_payment_id=data['razorpay_payment_id']
+    razorpay_signature=data['razorpay_signature']
+
+    generated_signature=hmac.new(
+        bytes(RAZORPAY_KEY_SECRET,'utf-8'),
+
+        bytes(
+            razorpay_order_id +
+            "|" + 
+            razorpay_payment_id,
+            'utf-8'
+        ),
+        hashlib.sha256
+
+    ).hexdigest()
+
+    if generated_signature==razorpay_signature:
+
+        total=sum (
+            item['price']
+            for item in session.get('cart',[])
+        )
+        cursor.execute(
+            """INSERT INTO payments 
+            ( 
+                user_id,
+                order_id,
+                payment_id,
+                amount,status
+            )
+            VALUES
+            (%s,%s,%s,%s,%s)
+            """,(
+                session['user_id'],
+                razorpay_order_id,
+                razorpay_payment_id,
+                total,"Success"
+            )
+        )
+
+        conn.commit()
+
+        session['cart']=[]
+
+        return jsonify({
+            "status":"success"
+        })
+    
+    return jsonify({
+        "status":"failed"
+    })
+
+#----------------payment success-----------#
+
+@app.route('/payment_success')
+def payment_success():
+
+    return render_template('payment_success.html')
+
+
+#------------------REMOVE FROM CART----------------#
+@app.route('/remove_from_cart/<int:product_id>')
+def remove_cart(product_id):
+
+    cart = session.get('cart', [])
+
+    cart = [
+        item for item in cart
+        if item['id'] != product_id
+    ]
+    session['cart'] = cart
+
+    flash("Item Removed from cart ")
+
+    return redirect('/view_cart')
+
+
+
+
+#user search
 @app.route('/user_search',methods=['GET','POST'])
 def user_search():
     if request.method == 'POST':
@@ -324,5 +550,48 @@ def user_search():
         products = cursor.fetchall()
     return render_template('search_results.html',products=products)
 
+# add to cart
+@app.route('/add_to_cart/<int:product_id>')
+def add_to_cart(product_id):
+    cursor.execute(
+        "SELECT * FROM products WHERE id=%s",
+        (product_id,)
+    )
+    product = cursor.fetchone()
+    if product:
+        cart = session.get('cart',[])
+
+        cart.append({
+            'id':product[0],
+            'name':product[1],
+            'price':float(product[3]),
+            'image':product[4]
+        })
+
+        session['cart']=cart
+
+        flash("product added to cart successfully")
+
+        return redirect('/user_dashboard')
+    # return render_template('view_cart.html',product = product)
+
+
+@app.route('/view_cart')
+def view_cart():
+    if 'user_id' not in session:
+        flash("Please login first")
+        return redirect('/user_login')
+    cart=session.get('cart',[])
+
+    total=sum(item['price'] for item in cart)
+
+    return render_template(
+        'view_cart.html',cart=cart,total=total
+    )
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+

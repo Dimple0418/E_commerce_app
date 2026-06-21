@@ -5,41 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <form method="POST" action="/user_search">
-    <input type="text"
-           name="keyword"
-           placeholder="Search Products">
 
-    <button type="submit">
-        Search
-    </button>
-</form>
+    <div class="dashboard-header">
 
-<hr>
+    <h1>🛒 E-Commerce Store</h1>
 
-{% for product in products %}
+    <form method="POST"
+          action="/user_search"
+          class="search-form">
 
-<div>
+        <input type="text"
+               name="keyword"
+               placeholder="Search Products">
 
-    <img src="{{ url_for('static',
-    filename='images/' + product[4]) }}"
-    width="150">
+        <button type="submit">
+            Search
+        </button>
 
-    <h3>{{ product[1] }}</h3>
+    </form>
 
-    <p>₹ {{ product[3] }}</p>
-
-    <a href="/user_view_item/{{ product[0] }}">
-        View Details
+    <a href="/view_cart" class="cart-btn">
+        View Cart
     </a>
 
 </div>
 
-<hr>
+<div class="product-grid">
+
+{% for product in products %}
+
+<div class="product-card">
+
+    <img src="{{ url_for('static',
+    filename='images/' + product[4]) }}">
+
+    <div class="product-info">
+
+        <h3>{{ product[1] }}</h3>
+
+        <p class="price">
+            ₹{{ product[3] }}
+        </p>
+
+        <div class="card-buttons">
+
+            <a href="/user_view_item/{{ product[0] }}"
+               class="view-btn">
+               View Details
+            </a>
+
+            <a href="/add_to_cart/{{ product[0] }}"
+               class="cart-add-btn">
+               Add To Cart
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
 
 {% endfor %}
+
+</div>
+
+
 </body>
 </html>
