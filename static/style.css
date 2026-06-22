@@ -476,3 +476,129 @@ background:linear-gradient(
 transform:translateY(-3px);
 color:white;
 }
+
+/* ================= PAYMENT SUCCESS PAGE ================= */
+
+.success-container{
+    width:90%;
+    max-width:700px;
+    margin:80px auto;
+    text-align:center;
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(20px);
+    padding:50px;
+    border-radius:25px;
+    box-shadow:0 10px 40px rgba(0,0,0,.3);
+    animation:slideUp .8s ease;
+}
+
+.success-icon{
+    font-size:80px;
+    margin-bottom:20px;
+}
+
+.success-container h1{
+    font-size:40px;
+    margin-bottom:15px;
+}
+
+.success-container p{
+    font-size:18px;
+    margin-bottom:30px;
+}
+
+.orders-btn{
+    display:inline-block;
+    padding:14px 30px;
+    border-radius:12px;
+    background:linear-gradient(
+    135deg,
+    #22c55e,
+    #16a34a
+    );
+    color:white;
+    font-weight:600;
+    transition:.3s;
+}
+
+.orders-btn:hover{
+    transform:translateY(-4px);
+    color:white;
+    box-shadow:0 10px 25px rgba(34,197,94,.4);
+}
+
+
+/* ================= MY ORDERS PAGE ================= */
+
+.orders-container{
+    width:95%;
+    max-width:1200px;
+    margin:50px auto;
+}
+
+.orders-title{
+    text-align:center;
+    font-size:38px;
+    font-weight:700;
+    margin-bottom:30px;
+    text-shadow:0 4px 10px rgba(0,0,0,.2);
+}
+
+.orders-table{
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 10px 35px rgba(0,0,0,.25);
+}
+
+.orders-table table{
+    margin:0;
+    width:100%;
+}
+
+.orders-table th{
+    background:#4f46e5;
+    color:white;
+    font-size:16px;
+}
+
+.orders-table td{
+    font-weight:500;
+}
+
+.orders-table tr:hover{
+    background:rgba(255,255,255,.25);
+}
+
+.no-orders{
+    text-align:center;
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(15px);
+    padding:40px;
+    border-radius:20px;
+    font-size:20px;
+    margin-top:20px;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+    .success-container{
+        padding:30px;
+    }
+
+    .success-container h1{
+        font-size:30px;
+    }
+
+    .orders-title{
+        font-size:28px;
+    }
+
+    .orders-table{
+        overflow-x:auto;
+    }
+}

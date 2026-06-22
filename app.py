@@ -24,7 +24,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(
 )
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-#DATABASE CONNECTION
+#--------DATABASE CONNECTION--------#
 
 conn=mysql.connector.connect(
     host="localhost",
@@ -35,7 +35,7 @@ conn=mysql.connector.connect(
 
 cursor = conn.cursor(buffered=True)
 
-# GENERATING OTP
+#----------GENERATING OTP---------#
 def send_otp(email,otp):
     sender_email="chittimujudimple@gmail.com"
     sender_pass="pgmn iwuk qfbq vvsj"
@@ -63,7 +63,7 @@ def send_otp(email,otp):
         server.send_message(msg)
     print('OTP sent successfully')
 
-# ADMIN SIGNUP
+#------------ ADMIN SIGNUP ---------#
 @app.route('/admin_signup',methods=['GET','POST'])
 def admin_signup():
     if request.method == 'POST':
@@ -89,7 +89,7 @@ def admin_signup():
     return render_template('admin_signup.html')
 
 
-# VERIFY OTP
+#---------- VERIFY OTP ----------#
 @app.route('/verify_otp',methods=['GET','POST'])
 def verify_otp():
     if request.method == 'POST':
@@ -122,7 +122,7 @@ def verify_otp():
             flash("Invalid OTP")
     return render_template('verify_otp.html')
 
-# ADMIN LOGIN
+#----------- ADMIN LOGIN----------#
 @app.route('/admin_login',methods=['GET','POST'])
 def admin_login():
     if request.method == 'POST':
@@ -150,7 +150,7 @@ def admin_login():
             flash("Mail not Registered")
     return render_template('admin_login.html')
 
-# DASHBOARD
+#------------ADMIN DASHBOARD ----------#
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'admin_id' not in session :
@@ -158,7 +158,7 @@ def admin_dashboard():
         return redirect('/admin_login')
     return render_template('admin_dashboard.html',admin_name=session['admin_name'],admin_email=session['admin_email'])
 
-#ADMIN PROFILE 
+#---------------ADMIN PROFILE--------# 
 @app.route('/admin_profile',methods=['GET','POST'])
 def admin_profile():
     if 'admin_id' not in session:
@@ -200,7 +200,7 @@ def admin_profile():
         return redirect('/admin_profile')
     return render_template('/admin_profile.html',admin=admin)
 
-# LOGOUT
+#---------- LOGOUT ----------#
 @app.route('/logout')
 def logout():
     session.pop('admin_id',None)
@@ -210,7 +210,7 @@ def logout():
     flash("Logged out Successfully")
     return redirect('/admin_login')
 
-# ADD PRODUCT
+#----------- ADD PRODUCT----------#
 
 @app.route('/add_item',methods=['GET','POST'])
 def add_item():
@@ -239,7 +239,7 @@ INSERT INTO products(product_name,description,price,image) VALUES(%s,%s,%s,%s)""
         return redirect('/add_item')
     return render_template('add_item.html') 
 
-#item_listing
+#------------item_listing--------------#
 @app.route('/item_listing',methods=['GET','POST'])
 def item_listing():
     if 'admin_id' not in session:
@@ -279,6 +279,7 @@ def view_item(product_id):
         product=product
     )
 
+#-------UPDATE ITEM --------#
 @app.route('/update_item/<int:product_id>',methods=['GET','POST'])
 def update_item(product_id):
     if 'admin_id' not in session:
@@ -317,7 +318,7 @@ def update_item(product_id):
         return redirect('/item_listing')
     return render_template('update_item.html',product=product)
 
-#DELETE ITEM
+#----------DELETE ITEM-------------#
 @app.route('/delete_item/<int:product_id>')
 def delete_item(product_id):
      if 'admin_id' not in session:
@@ -334,7 +335,7 @@ def delete_item(product_id):
      return redirect('/item_listing')
 
 
-#USER SIGNUP
+#-----------USER SIGNUP----------#
 @app.route('/user_signup',methods=['GET','POST'])
 def user_signup():
     if request.method == 'POST':
@@ -364,7 +365,7 @@ def user_signup():
         return redirect('/user_login')
     return render_template('user_signup.html')
 
-#USER LOGIN
+#-----------USER LOGIN---------#
 @app.route('/user_login',methods=['GET','POST'])
 def user_login():
     if request.method == 'POST':
@@ -390,7 +391,7 @@ def user_login():
             flash("Mail not Registered")
     return render_template('user_login.html')
 
-#USER SIGNOUT
+#----------USER SIGNOUT-----------#
 @app.route('/user_logout')
 def user_logout():
     session.pop('user_id',None)
@@ -401,7 +402,7 @@ def user_logout():
 
     return redirect('/user_login')
 
-#-------------USER DASHBOARD----#
+#-------------USER DASHBOARD----------#
 
 @app.route('/user_dashboard')
 def user_dashboard():
@@ -451,70 +452,122 @@ def checkout():
     )
 
 #------------verify payment----------#
-@app.route('/verify_payment',methods=['POST'])
+@app.route('/verify_payment', methods=['POST'])
 def verify_payment():
-    data=request.get_json()
 
-    razorpay_order_id=data['razorpay_order_id']
-    razorpay_payment_id=data['razorpay_payment_id']
-    razorpay_signature=data['razorpay_signature']
+    data = request.get_json()
 
-    generated_signature=hmac.new(
-        bytes(RAZORPAY_KEY_SECRET,'utf-8'),
+    razorpay_order_id = data['razorpay_order_id']
+    razorpay_payment_id = data['razorpay_payment_id']
+    razorpay_signature = data['razorpay_signature']
 
+    generated_signature = hmac.new(
+        bytes(RAZORPAY_KEY_SECRET, 'utf-8'),
         bytes(
-            razorpay_order_id +
-            "|" + 
-            razorpay_payment_id,
+            razorpay_order_id + "|" + razorpay_payment_id,
             'utf-8'
         ),
         hashlib.sha256
-
     ).hexdigest()
 
-    if generated_signature==razorpay_signature:
+    if generated_signature == razorpay_signature:
 
-        total=sum (
-            item['price']
-            for item in session.get('cart',[])
+        cart = session.get('cart', [])
+
+        total = sum(
+            float(item['price'])
+            for item in cart
         )
+
+        # Insert into orders table
         cursor.execute(
-            """INSERT INTO payments 
-            ( 
+            """
+            INSERT INTO orders
+            (
                 user_id,
-                order_id,
-                payment_id,
-                amount,status
+                razorpay_order_id,
+                razorpay_payment_id,
+                total_amount
             )
-            VALUES
-            (%s,%s,%s,%s,%s)
-            """,(
+            VALUES (%s,%s,%s,%s)
+            """,
+            (
                 session['user_id'],
                 razorpay_order_id,
                 razorpay_payment_id,
-                total,"Success"
+                total
             )
         )
 
         conn.commit()
 
-        session['cart']=[]
+        order_id = cursor.lastrowid
+
+        # Insert into payments table
+        cursor.execute(
+            """
+            INSERT INTO payments
+            (
+                user_id,
+                order_id,
+                payment_id,
+                amount,
+                status
+            )
+            VALUES (%s,%s,%s,%s,%s)
+            """,
+            (
+                session['user_id'],
+                razorpay_order_id,
+                razorpay_payment_id,
+                total,
+                "Success"
+            )
+        )
+
+        conn.commit()
+
+        # Insert products into order_items
+        for item in cart:
+
+            cursor.execute(
+                """
+                INSERT INTO order_items
+                (
+                    order_id,
+                    product_id,
+                    product_name,
+                    price
+                )
+                VALUES (%s,%s,%s,%s)
+                """,
+                (
+                    order_id,
+                    item['id'],
+                    item['name'],
+                    item['price']
+                )
+            )
+
+        conn.commit()
+
+        session['cart'] = []
 
         return jsonify({
-            "status":"success"
+            "status": "success"
         })
-    
+
     return jsonify({
-        "status":"failed"
+        "status": "failed"
     })
 
-#----------------payment success-----------#
 
+#----------------payment success-----------#
 @app.route('/payment_success')
 def payment_success():
-
+    if 'user_id' not in session:
+        return redirect('/user_login')
     return render_template('payment_success.html')
-
 
 #------------------REMOVE FROM CART----------------#
 @app.route('/remove_from_cart/<int:product_id>')
@@ -533,9 +586,7 @@ def remove_cart(product_id):
     return redirect('/view_cart')
 
 
-
-
-#user search
+#----------user search-----------#
 @app.route('/user_search',methods=['GET','POST'])
 def user_search():
     if request.method == 'POST':
@@ -550,7 +601,7 @@ def user_search():
         products = cursor.fetchall()
     return render_template('search_results.html',products=products)
 
-# add to cart
+#-------------- add to cart----------#
 @app.route('/add_to_cart/<int:product_id>')
 def add_to_cart(product_id):
     cursor.execute(
@@ -575,7 +626,32 @@ def add_to_cart(product_id):
         return redirect('/user_dashboard')
     # return render_template('view_cart.html',product = product)
 
+#-----my orders----#
+@app.route('/my_orders')
+def my_orders():
 
+    if 'user_id' not in session:
+        return redirect('/user_login')
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM orders
+        WHERE user_id=%s
+        ORDER BY id DESC
+        """,
+        (session['user_id'],)
+    )
+
+    orders = cursor.fetchall()
+
+    return render_template(
+        'my_orders.html',
+        orders=orders
+    )
+
+
+#----------VIEW CART-----------------#
 @app.route('/view_cart')
 def view_cart():
     if 'user_id' not in session:

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Orders</title>
+     <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="orders-container">
+
+    <h2 class="orders-title">My Orders</h2>
+
+    <div class="orders-table">
+
+        <table class="table">
+
+            <tr>
+                <th>Order ID</th>
+                <th>Payment ID</th>
+                <th>Total Amount</th>
+                <th>Date</th>
+            </tr>
+
+            {% for order in orders %}
+
+            <tr>
+                <td>{{ order[0] }}</td>
+                <td>{{ order[3] }}</td>
+                <td>₹{{ order[4] }}</td>
+                <td>{{ order[5] }}</td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</div>
+</body>
+</html>

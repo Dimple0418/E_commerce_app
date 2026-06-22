@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Success</title>
-    <link rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
+    <title>Payment Success</title>
+     <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+<div class="success-container">
 
-<h1>Payment Successful</h1>
+    <div class="success-icon">🎉</div>
 
-<a href="/user_dashboard">
-    Continue Shopping
-</a>
+    <h1>Payment Successful</h1>
+
+    <p>Your order has been placed successfully.</p>
+
+    <a href="/my_orders" class="orders-btn">
+        View My Orders
+    </a>
+
+</div>
 
 </body>
 </html>
