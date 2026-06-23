@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<body>
+
+<div class="invoice-container">
+
+    <h1 class="invoice-title">Invoice</h1>
+
+    <div class="invoice-info">
+        <p><b>Order ID:</b> {{ order[0] }}</p>
+        <p><b>Payment ID:</b> {{ order[3] }}</p>
+        <p><b>Date:</b> {{ order[5] }}</p>
+    </div>
+
+    <table class="invoice-table">
+        <tr>
+            <th>Product</th>
+            <th>Price</th>
+        </tr>
+
+        {% for item in items %}
+        <tr>
+            <td>{{ item[3] }}</td>
+            <td>₹{{ item[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="total-box">
+        <h3>Total Amount : ₹{{ order[4] }}</h3>
+    </div>
+
+    <center>
+        <button class="print-btn" onclick="window.print()">
+            Print Invoice
+        </button>
+    </center>
+
+    <div class="invoice-footer">
+        <p>Thank you for shopping with us.</p>
+    </div>
+
+</div>
+
+</body>
+</body>
+</html>

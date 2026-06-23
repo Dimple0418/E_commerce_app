@@ -7,6 +7,11 @@ import razorpay
 import hmac
 import hashlib
 from flask import jsonify
+from flask import send_file
+from xhtml2pdf import pisa
+from io import BytesIO
+
+
 
 
 app=Flask(__name__)
@@ -211,7 +216,6 @@ def logout():
     return redirect('/admin_login')
 
 #----------- ADD PRODUCT----------#
-
 @app.route('/add_item',methods=['GET','POST'])
 def add_item():
     if 'admin_id' not in session:
@@ -502,6 +506,8 @@ def verify_payment():
         conn.commit()
 
         order_id = cursor.lastrowid
+        session['last_order_id']=order_id
+
 
         # Insert into payments table
         cursor.execute(
@@ -648,6 +654,63 @@ def my_orders():
     return render_template(
         'my_orders.html',
         orders=orders
+    )
+
+#------invoice----#
+@app.route('/invoice/<int:order_id>')
+def invoice(order_id):
+    if 'user_id' not in session:
+        return redirect ('/user_login')
+    
+    cursor.execute(
+        """ SELECT *FROM orders WHERE id=%s """,
+        (order_id,)
+    )
+    order=cursor.fetchone()
+
+    cursor.execute(
+        """ SELECT * FROM order_items WHERE order_id=%s""",
+        (order_id,)
+    )
+    items=cursor.fetchall()
+    return render_template('invoice.html',order=order,items=items)
+
+#-----------Download pdf-------#
+@app.route('/download_invoice/<int:order_id>')
+def download_invoice(order_id):
+    if 'user_id' not in session:
+        return redirect ('/user_login')
+    cursor.execute(
+         """SELECT*FROM orders WHERE id=%s """,
+         (order_id,)
+    )
+
+    order=cursor.fetchone()
+    cursor.execute(
+        """SELECT * FROM order_items
+         WHERE order_id=%s
+         """,
+         (order_id,)
+    )
+
+    items=cursor.fetchall()
+    html=render_template(
+        "invoice.html",order=order,items=items
+    )
+    pdf =BytesIO()
+    pisa_status=pisa.CreatePDF(
+        html,
+        dest=pdf
+    )    
+    if pisa_status.err:
+        return "ERROR GENERATING IN PDF"
+    pdf.seek(0)
+    
+    return send_file(
+        pdf,
+        download_name=f"invoice_{order_id}.pdf",
+        as_attachment=True,
+        mimetype="application/pdf"
     )
 
 

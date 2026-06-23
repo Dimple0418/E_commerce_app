@@ -2,40 +2,95 @@
 <html>
 <head>
     <title>My Orders</title>
-     <link rel="stylesheet"
+
+    <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
 <div class="orders-container">
 
-    <h2 class="orders-title">My Orders</h2>
+    <h1 class="orders-title">My Orders</h1>
+
+    {% if orders %}
 
     <div class="orders-table">
 
-        <table class="table">
+        <table>
 
-            <tr>
-                <th>Order ID</th>
-                <th>Payment ID</th>
-                <th>Total Amount</th>
-                <th>Date</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Payment ID</th>
+                    <th>Total Amount</th>
+                    <th>Order Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
 
             {% for order in orders %}
 
             <tr>
+
                 <td>{{ order[0] }}</td>
+
                 <td>{{ order[3] }}</td>
+
                 <td>₹{{ order[4] }}</td>
+
                 <td>{{ order[5] }}</td>
+
+                <td>
+
+                    <a href="{{ url_for('invoice', order_id=order[0]) }}"
+                       class="btn view-btn">
+
+                        View Invoice
+
+                    </a>
+
+                    <a href="{{ url_for('download_invoice', order_id=order[0]) }}"
+                       class="btn cart-add-btn">
+
+                        Download PDF
+
+                    </a>
+
+                </td>
+
             </tr>
 
             {% endfor %}
+
+            </tbody>
 
         </table>
 
     </div>
 
+    {% else %}
+
+    <div class="no-orders">
+        <h3>No Orders Found</h3>
+        <p>You haven't placed any orders yet.</p>
+    </div>
+
+    {% endif %}
+
+    <div style="text-align:center; margin-top:30px;">
+
+        <a href="{{ url_for('user_dashboard') }}"
+           class="btn">
+
+            Continue Shopping
+
+        </a>
+
+    </div>
+
 </div>
+
 </body>
 </html>
